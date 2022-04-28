@@ -14,3 +14,13 @@
     - git
     - wget
     - tree
+
+
+
+#- hosts: all
+#  become: true
+# tasks:
+#  - name: Installing Packages
+#    yum: 
+#      name: ['zip','unzip','vim','nano','curl','git','wget','tree']
+#      state: present
