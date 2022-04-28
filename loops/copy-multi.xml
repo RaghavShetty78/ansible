@@ -1,0 +1,13 @@
+- hosts: all
+  become: true
+  tasks:
+  - name: Copying Multiple files from Multiple Locations
+    copy:
+      src: "{{item.src}}"
+      dest: "{{item.dest}}"
+      owner: "{{item.owner}}"
+      mode: "{{item.mode}}"
+    with_items:
+    - {"src":"/home/ansible/index.html", "dest":"/tmp/index.html", "owner":"raghav", "mode":"0655"} 
+    - {"src":"/home/ansible/text.txt", "dest":"/opt/text.txt", "owner":"shetty", "mode":"0400"}
+
