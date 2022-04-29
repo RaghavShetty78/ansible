@@ -1,0 +1,70 @@
+# tasks file for tomcat
+- name: Install Epel Release which has daemonize  dependency which is required for Tomcat.
+  yum:
+    name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+    state: present
+    disable_gpg_check: true
+- name: Install basic packages
+  package:
+    name: ['vim','bash-completion','tmux','tree','htop','wget','unzip','curl','git']
+    state: present
+- name: Install Java 8 
+  yum:
+    name: java-1.8.0-openjdk
+    state: present
+- name: Create tomcat User
+  user:
+    name: tomcat
+    create_home: true
+    shell: /bin/bash
+    comment: "Tomcat Management Account"
+    expires: -1
+    password: "{{ "{{user_password}}" | password_hash('sha512','A512') }}"
+- name: Create tomcat group
+  group:
+    name: tomcat
+- name: Downloading tomcat tar file
+  get_url:
+    url: https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.62/bin/apache-tomcat-9.0.62.tar.gz
+    dest: /usr/local/apache-tomcat-9.0.62.tar.gz
+- name: Creating a tomcat9 directory
+  ansible.builtin.file:
+    path: /usr/local/tomcat9
+    state: directory
+    owner: tomcat
+    group: tomcat
+    mode: "0775"
+    recurse: yes
+- name: Extracting Tomcat tar file
+  unarchive:
+    src: /usr/local/apache-tomcat-9.0.62.tar.gz
+    dest: /usr/local/tomcat9
+    owner: tomcat
+    group: tomcat
+    remote_src: yes
+    extra_opts: "--strip-components=1"
+- name: Copy tomcat service file
+  template:
+    src: tomcat.service
+    dest: /etc/systemd/system/tomcat.service
+  when: ansible_service_mgr == "systemd"
+- name: Start and enable tomcat
+  service:
+    daemon_reload: yes
+    name: tomcat
+    state: started
+    enabled: yes
+  when: ansible_service_mgr == "systemd"
+- name: Setting tomcat UI access creds
+  template:
+    src: tomcat-users.xml
+    dest: /usr/local/tomcat9/conf/tomcat-users.xml
+  notify: restart tomcat
+- name: Allow access to Manager and Host Manager apps from any IP
+  template:
+    src: context.xml
+    dest: "{{ item }}"
+  with_items:
+     - /usr/local/tomcat9/webapps/host-manager/META-INF/context.xml
+     - /usr/local/tomcat9/webapps/manager/META-INF/context.xml
+  notify: restart tomcat
