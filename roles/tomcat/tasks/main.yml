@@ -19,7 +19,7 @@
     shell: /bin/bash
     comment: "Tomcat Management Account"
     expires: -1
-    password: "{{ "{{user_password}}" | password_hash('sha512','A512') }}"
+    password: "{{ user_password | password_hash('sha512','A512') }}"
 - name: Create tomcat group
   group:
     name: tomcat
